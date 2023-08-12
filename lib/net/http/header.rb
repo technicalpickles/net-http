@@ -491,7 +491,7 @@ module Net::HTTPHeader
   alias canonical_each each_capitalized
 
   def capitalize(name)
-    name.to_s.split('-').map {|s| s.capitalize }.join('-')
+    name.to_s.split('-').map! {|s| s.capitalize }.join('-')
   end
   private :capitalize
 
@@ -521,7 +521,7 @@ module Net::HTTPHeader
     end
 
     byte_range_set = $1
-    result = byte_range_set.split(',').map {|spec|
+    result = byte_range_set.split(',').map! {|spec|
       m = /(\d+)?\s*-\s*(\d+)?/i.match(spec) or
               raise Net::HTTPHeaderSyntaxError, "invalid byte-range-spec: '#{spec}'"
       d1 = m[1].to_i
