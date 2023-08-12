@@ -70,7 +70,7 @@
 #
 # - These methods return field values as string;
 #   the string value for a field is equivalent to
-#   <tt>self[key.downcase.to_s].join(', '))</tt>:
+#   <tt>self[key.to_s.downcase].join(', '))</tt>:
 #
 #   - #[]: Returns the string value for the given key,
 #     or +nil+ if it does not exist.
@@ -200,7 +200,7 @@ module Net::HTTPHeader
         if value.count("\r\n") > 0
           raise ArgumentError, "header #{key} has field value #{value.inspect}, this cannot include CR/LF"
         end
-        @header[key.downcase.to_s] = [value]
+        @header[downcase(key)] = [value]
       end
     end
   end
@@ -222,7 +222,7 @@ module Net::HTTPHeader
   # Note that some field values may be retrieved via convenience methods;
   # see {Getters}[rdoc-ref:Net::HTTPHeader@Getters].
   def [](key)
-    a = @header[key.downcase.to_s] or return nil
+    a = @header[downcase(key)] or return nil
     a.join(', ')
   end
 
@@ -239,7 +239,7 @@ module Net::HTTPHeader
   # see {Setters}[rdoc-ref:Net::HTTPHeader@Setters].
   def []=(key, val)
     unless val
-      @header.delete key.downcase.to_s
+      @header.delete downcase(key)
       return val
     end
     set_field(key, val)
@@ -259,7 +259,7 @@ module Net::HTTPHeader
   #   req.get_fields('Foo') # => ["bar", "baz", "baz", "bam"]
   #
   def add_field(key, val)
-    stringified_downcased_key = key.downcase.to_s
+    stringified_downcased_key = downcase(key)
     if @header.key?(stringified_downcased_key)
       append_field_value(@header[stringified_downcased_key], val)
     else
@@ -272,13 +272,13 @@ module Net::HTTPHeader
     when Enumerable
       ary = []
       append_field_value(ary, val)
-      @header[key.downcase.to_s] = ary
+      @header[downcase(key)] = ary
     else
       val = val.to_s # for compatibility use to_s instead of to_str
       if val.b.count("\r\n") > 0
         raise ArgumentError, 'header field value cannot include CR/LF'
       end
-      @header[key.downcase.to_s] = [val]
+      @header[downcase(key)] = [val]
     end
   end
 
@@ -304,7 +304,7 @@ module Net::HTTPHeader
   #   res.get_fields('Nosuch')     # => nil
   #
   def get_fields(key)
-    stringified_downcased_key = key.downcase.to_s
+    stringified_downcased_key = downcase(key)
     return nil unless @header[stringified_downcased_key]
     @header[stringified_downcased_key].dup
   end
@@ -339,7 +339,7 @@ module Net::HTTPHeader
   #   res.fetch('Nosuch')            # Raises KeyError.
   #
   def fetch(key, *args, &block)   #:yield: +key+
-    a = @header.fetch(key.downcase.to_s, *args, &block)
+    a = @header.fetch(downcase(key), *args, &block)
     a.kind_of?(Array) ? a.join(', ') : a
   end
 
@@ -451,7 +451,7 @@ module Net::HTTPHeader
   #   req.delete('Nosuch') # => nil
   #
   def delete(key)
-    @header.delete(key.downcase.to_s)
+    @header.delete(downcase(key))
   end
 
   # Returns +true+ if the field for the case-insensitive +key+ exists, +false+ otherwise:
@@ -461,7 +461,7 @@ module Net::HTTPHeader
   #   req.key?('Nosuch') # => false
   #
   def key?(key)
-    @header.key?(key.downcase.to_s)
+    @header.key?(downcase(key))
   end
 
   # Returns a hash of the key/value pairs:
@@ -494,6 +494,11 @@ module Net::HTTPHeader
     name.to_s.split('-').map! {|s| s.capitalize }.join('-')
   end
   private :capitalize
+
+  def downcase(key)
+    key.to_s.downcase
+  end
+  private :downcase
 
   # Returns an array of Range objects that represent
   # the value of field <tt>'Range'</tt>,
